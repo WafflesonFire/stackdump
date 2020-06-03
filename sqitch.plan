@@ -2,3 +2,25 @@
 %project=stackdump
 %uri=https://github.com/WafflesonFire/stackdump/
 
+appschema 2020-05-28T15:04:28Z Samuel Beaulieu <samuel.beaulieu@tarkalabs.com> # Add schema for stackdump.
+users [appschema] 2020-05-28T17:08:17Z Samuel Beaulieu <samuel.beaulieu@tarkalabs.com> # Creates users table
+badges [users] 2020-05-28T17:27:54Z Samuel Beaulieu <samuel.beaulieu@tarkalabs.com> # Creates badges table
+postTypes [appschema] 2020-05-29T13:08:34Z Samuel Beaulieu <samuel.beaulieu@tarkalabs.com> # A list of the types of posts.
+posts [appschema postTypes] 2020-05-29T13:24:39Z Samuel Beaulieu <samuel.beaulieu@tarkalabs.com> # A list of the posts.
+postLinks [appschema posts] 2020-05-29T13:46:32Z Samuel Beaulieu <samuel.beaulieu@tarkalabs.com> # A list of the post links.
+comments [appschema posts users] 2020-06-01T12:18:00Z Samuel Beaulieu <samuel.beaulieu@tarkalabs.com> # A list of the comments.
+tags [appschema posts] 2020-06-01T12:33:35Z Samuel Beaulieu <samuel.beaulieu@tarkalabs.com> # A list of the tags.
+postHistoryTypes [appschema] 2020-06-01T12:37:55Z Samuel Beaulieu <samuel.beaulieu@tarkalabs.com> # A list of the post history types.
+postHistory [appschema users posts postHistoryTypes] 2020-06-01T12:42:29Z Samuel Beaulieu <samuel.beaulieu@tarkalabs.com> # A list of the post edit history.
+voteTypes [appschema] 2020-06-01T12:49:51Z Samuel Beaulieu <samuel.beaulieu@tarkalabs.com> # A list of the vote types.
+votes [appschema posts users] 2020-06-01T13:02:52Z Samuel Beaulieu <samuel.beaulieu@tarkalabs.com> # A list of the votes.
+insert_user [appschema users] 2020-06-02T17:17:27Z Samuel Beaulieu <samuel.beaulieu@tarkalabs.com> # A stored procedure to add a user.
+insert_badge [appschema badges] 2020-06-02T17:17:48Z Samuel Beaulieu <samuel.beaulieu@tarkalabs.com> # A stored procedure to add a badge.
+insert_post [appschema posts] 2020-06-02T17:18:14Z Samuel Beaulieu <samuel.beaulieu@tarkalabs.com> # A stored procedure to add a post.
+insert_postLink [appschema postLinks] 2020-06-02T17:18:33Z Samuel Beaulieu <samuel.beaulieu@tarkalabs.com> # A stored procedure to add a post link.
+insert_comment [appschema comments] 2020-06-02T17:19:08Z Samuel Beaulieu <samuel.beaulieu@tarkalabs.com> # A stored procedure to add a comment.
+insert_tag [appschema tags] 2020-06-02T17:19:29Z Samuel Beaulieu <samuel.beaulieu@tarkalabs.com> # A stored procedure to add a tag.
+insert_postHistory [appschema postHistory] 2020-06-02T17:20:02Z Samuel Beaulieu <samuel.beaulieu@tarkalabs.com> # A stored procedure to add a post history.
+insert_vote [appschema votes] 2020-06-02T17:20:32Z Samuel Beaulieu <samuel.beaulieu@tarkalabs.com> # A stored procedure to add a vote.
+dataRows [appschema badges comments postHistory postLinks posts tags users votes] 2020-06-01T13:42:27Z Samuel Beaulieu <samuel.beaulieu@tarkalabs.com> # The rows to be inserted.
+@v1.0.0-dev1 2020-06-03T17:22:19Z Samuel Beaulieu <samuel.beaulieu@tarkalabs.com> # Tag v1.0.0-dev1.

@@ -1,0 +1,7 @@
+-- Revert stackdump:insert_user from pg
+
+BEGIN;
+
+DROP FUNCTION stackdump.insert_user(INTEGER, INTEGER, TIMESTAMP, TEXT, TIMESTAMP, TEXT, TEXT, TEXT, INTEGER, INTEGER, INTEGER, TEXT, INTEGER);
+
+COMMIT;
