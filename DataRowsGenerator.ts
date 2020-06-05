@@ -4,50 +4,49 @@ const convert = require('xml-js');
 
 //Section 1: Choose Stackexchange dump, download and unzip
 //Main function
-let zipFile: string;
-if(process.argv.length === 3) {
-    zipFile = process.argv[2];
-    let unzip = unzipFile();
-    unzip.then(function() {
-        if(fs.readdirSync('./' + 'temp').length === 0) {
-            console.log('No file unzipped, exiting program.');
-            cleanUp();
-            process.exit(0);
-        }
-        console.log('Unzipping complete.');
-        generateQueries();
-    })
-        
-} else {
+if(process.argv.length !== 3) {
     console.log('Enter the name of the .7z stackdump file.');
     process.exit(0);
 }
-
-/*
-Unzips a file using 7zip-min.
-*/
-function unzipFile() {
-    return new Promise((resolve) => {
-		_7z.unpack('./' + zipFile, './temp', err => {
-			resolve();
-		});
-    });
+if (!fs.existsSync('./temp')) {
+    fs.mkdirSync('./temp');
 }
+
+new Promise((resolve) => {
+    _7z.unpack('./' + process.argv[2], './temp', err => {
+        resolve();
+    });
+}).then(() => {
+    if(fs.readdirSync('./' + 'temp').length === 0) {
+        console.log('No file unzipped, exiting program.');
+        cleanUp();
+        process.exit(0);
+    }
+
+    console.log('Unzipping complete.');
+    generateQueries();
+});
 
 //Section 2: Generate and execute queries
 function generateQueries(): void {
     //Create schema and get list of xml files
-    let xmlList: string[] = ['Users.xml', 'Badges.xml', 'Posts.xml', 'PostLinks.xml', 'Comments.xml', 'Tags.xml', 'PostHistory.xml', 'Votes.xml'];
+    const xmlList: string[] = ['Users.xml', 'Badges.xml', 'Posts.xml', 'PostLinks.xml', 'Comments.xml', 'Tags.xml', 'PostHistory.xml', 'Votes.xml'];
 
-    //TO DO: VERIFY THAT THE FOLDER HAS THE CORRECT FILES
+    const tempFiles: string[] = fs.readdirSync('./temp');
+    xmlList.forEach((xmlFile) => {
+        if(!tempFiles.includes(xmlFile)) {
+            console.log('.7z did not contain the .xml files typical of a stack exchange data dump. Terminating program.');
+            cleanUp();
+            process.exit(0);
+        }
+    });
 
     generateDependencies();
     //Loop through files in folder
-    for(let i = 0; i < xmlList.length; i++) {
-
+    xmlList.forEach((xmlFile) => {
         //Read XML to create an array of rows, cut off XML tags at beginning of file
-        let currentXml: string = xmlList[i].toLowerCase();
-        let splitText: string[] = (fs.readFileSync('./temp/' + xmlList[i])).toString('utf-8').split('\n');
+        const currentXml: string = xmlFile.toLowerCase();
+        let splitText: string[] = (fs.readFileSync('./temp/' + xmlFile)).toString('utf-8').split('\n');
         splitText = splitText.slice(2, splitText.length - 1);
 
         //Generate column names and column data types
@@ -58,17 +57,16 @@ function generateQueries(): void {
         //generateFirstStatement(currentXml, columnList);
         generateInsert(currentXml, splitText, columnList, dataTypes);
         console.log(currentXml + ' processed.');
-        
-    }
+    });
+
     fs.appendFileSync('./dataRows.sql', '\nCOMMIT;');
     cleanUp();
-    
 }
 
 /*
 Generates the requires lines of the output file.
 */
-function generateDependencies() {
+function generateDependencies(): void {
     let query: string = '-- Deploy stackdump:dataRows to pg\n';
     query += '-- requires: appschema\n';
     query += '-- requires: badges\n';
@@ -186,19 +184,20 @@ function generateTypes(currentXml: string): string[] {
 /*
 Generates the INSERT ROW SQL statement for one .xml file.
 */
-function generateInsert(currentXml: string, splitText, columnList: string[], dataTypes: string[]): void {
+function generateInsert(currentXml: string, splitText: string[], columnList: string[], dataTypes: string[]): void {
     let query: string = '';
-    let value: string;
 
-    for(let i = 0; i < splitText.length; i++) {
+    splitText.forEach((line) => {
         if(currentXml === 'posthistory.xml') {
             query += 'SELECT stackdump.insert_' + currentXml.replace('.xml', '') + '(';
         } else {
             query += 'SELECT stackdump.insert_' + currentXml.replace('s.xml', '') + '(';
         }
-        let jsonVer = convert.xml2js(splitText[i], {compact: true})
-        for(let j = 0; j < columnList.length; j++) {
-            value = jsonVer.row._attributes[columnList[j]];
+        
+        const jsonVer = convert.xml2js(line, {compact: true})
+        for(let j: number = 0; j < columnList.length; j++) {
+            let value: string = jsonVer.row._attributes[columnList[j]];
+
             if(value) {
                 if(dataTypes[j] === 'TEXT') {
                     value = value.replace(/\'/g,'\'\'');
@@ -213,12 +212,14 @@ function generateInsert(currentXml: string, splitText, columnList: string[], dat
             } else {
                 query += 'NULL';
             }
+
             if(j !== columnList.length - 1) {
                 query += ', ';
             }
         }
         query += ');\n';
-    }
+    });
+
     fs.appendFileSync('./dataRows.sql', query);
 }
 
@@ -226,10 +227,6 @@ function generateInsert(currentXml: string, splitText, columnList: string[], dat
 Deletes .xml, .sql and the directory used to hold those files after the query has run.
 */
 function cleanUp(): void {
-    let deleteList: string[] = fs.readdirSync('./temp');
-    for(let i = 0; i < deleteList.length; i++) {
-        fs.unlinkSync('./temp/' + deleteList[i]);
-    }
-
+    fs.readdirSync('./temp').forEach((file) => fs.unlinkSync('./temp/' + file));
     fs.rmdirSync('./temp');
 }
