@@ -1,6 +1,7 @@
 const fs = require('fs');
 const _7z = require('7zip-min');
 const convert = require('xml-js');
+const answerList = [];
 
 //Section 1: Choose Stackexchange dump, download and unzip
 //Main function
@@ -52,7 +53,7 @@ function generateQueries(): void {
             let splitText: string[] = [];
 
             let myListener = newLineStream(function(line: string) {
-                if(line.length > 40) {
+                if(line.length > 40) { //could put a different condition here to check for 1st, 2nd and last lines
                     splitText.push(line);
                     if(splitText.length === 10000) {
                         processArray(splitText, xmlList[i], columnList, dataTypes);
@@ -66,6 +67,9 @@ function generateQueries(): void {
                 .on('end', () => {
                     processArray(splitText, xmlList[i], columnList, dataTypes);
                     if(i === xmlList.length - 1) {
+                        answerList.forEach(function(answer) {
+                            fs.appendFileSync('./dataRows.sql', 'SELECT stackdump.insert_answer(' + answer[0] + ',' + answer[1] + ');\n');
+                        });
                         fs.appendFileSync('./dataRows.sql', '\nCOMMIT;');
                         cleanUp();
                     }
@@ -76,10 +80,13 @@ function generateQueries(): void {
     
 }
 
+/*
+Splits the stream by newline characters.
+*/
 function newLineStream(callback) {
-	var buffer = '';
+	let buffer = '';
 	return (function (chunk) {
-		var i = 0, piece = '', offset = 0;
+		let i = 0, piece = '', offset = 0;
 		buffer += chunk;
 		while ((i = buffer.indexOf('\n', offset)) !== -1) {
 			piece = buffer.substr(offset, i - offset);
@@ -90,6 +97,9 @@ function newLineStream(callback) {
 	});
 }
 
+/*
+Processes the lines in the splitText array.
+*/
 function processArray(splitText: string[], currentXml: string, columnList: string[], dataTypes: string[]) {
     let query: string = '';
     splitText.forEach((line) => {
@@ -101,8 +111,13 @@ function processArray(splitText: string[], currentXml: string, columnList: strin
         }
         
         const jsonVer = convert.xml2js(line, {compact: true});
-        for(let j: number = 0; j < columnList.length; j++) {
+        for(let j: number = 0; j < columnList.length; j++) {  
             let value: string = jsonVer.row._attributes[columnList[j]];
+            if(columnList[j] === 'AcceptedAnswerId') {
+                if(jsonVer.row._attributes[columnList[0]] && value) {
+                    answerList.push([jsonVer.row._attributes[columnList[0]], value]);
+                }
+            }
             if(value) {
                 if(dataTypes[j] === 'TEXT') {
                     value = value.replace(/\'/g,'\'\'');

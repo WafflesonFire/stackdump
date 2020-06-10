@@ -1,6 +1,7 @@
 var fs = require('fs');
 var _7z = require('7zip-min');
 var convert = require('xml-js');
+var answerList = [];
 //Section 1: Choose Stackexchange dump, download and unzip
 //Main function
 if (process.argv.length !== 3) {
@@ -45,7 +46,7 @@ function generateQueries() {
             var dataTypes = generateTypes(xmlList[i].toLowerCase());
             var splitText = [];
             var myListener = newLineStream(function (line) {
-                if (line.length > 40) {
+                if (line.length > 40) { //could put a different condition here to check for 1st, 2nd and last lines
                     splitText.push(line);
                     if (splitText.length === 10000) {
                         processArray(splitText, xmlList[i], columnList, dataTypes);
@@ -58,6 +59,9 @@ function generateQueries() {
                 .on('end', function () {
                 processArray(splitText, xmlList[i], columnList, dataTypes);
                 if (i === xmlList.length - 1) {
+                    answerList.forEach(function (answer) {
+                        fs.appendFileSync('./dataRows.sql', 'SELECT stackdump.insert_answer(' + answer[0] + ',' + answer[1] + ');\n');
+                    });
                     fs.appendFileSync('./dataRows.sql', '\nCOMMIT;');
                     cleanUp();
                 }
@@ -72,6 +76,9 @@ function generateQueries() {
         p = out_p_1;
     }
 }
+/*
+Splits the stream by newline characters.
+*/
 function newLineStream(callback) {
     var buffer = '';
     return (function (chunk) {
@@ -85,6 +92,9 @@ function newLineStream(callback) {
         buffer = buffer.substr(offset);
     });
 }
+/*
+Processes the lines in the splitText array.
+*/
 function processArray(splitText, currentXml, columnList, dataTypes) {
     var query = '';
     splitText.forEach(function (line) {
@@ -98,6 +108,11 @@ function processArray(splitText, currentXml, columnList, dataTypes) {
         var jsonVer = convert.xml2js(line, { compact: true });
         for (var j = 0; j < columnList.length; j++) {
             var value = jsonVer.row._attributes[columnList[j]];
+            if (columnList[j] === 'AcceptedAnswerId') {
+                if (jsonVer.row._attributes[columnList[0]] && value) {
+                    answerList.push([jsonVer.row._attributes[columnList[0]], value]);
+                }
+            }
             if (value) {
                 if (dataTypes[j] === 'TEXT') {
                     value = value.replace(/\'/g, '\'\'');

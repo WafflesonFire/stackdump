@@ -23,7 +23,7 @@ CREATE OR REPLACE FUNCTION stackdump.insert_user(
     INSERT INTO stackdump.users VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13);
     EXCEPTION
         WHEN foreign_key_violation THEN
-            RAISE NOTICE 'caught fk constraint in user';
+            RAISE NOTICE 'caught fk violation in user, check that data was processed properly.';
     END;
 $$;
 

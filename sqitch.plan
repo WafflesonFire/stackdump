@@ -17,10 +17,13 @@ votes [appschema posts users] 2020-06-01T13:02:52Z Samuel Beaulieu <samuel.beaul
 insert_user [appschema users] 2020-06-02T17:17:27Z Samuel Beaulieu <samuel.beaulieu@tarkalabs.com> # A stored procedure to add a user.
 insert_badge [appschema badges] 2020-06-02T17:17:48Z Samuel Beaulieu <samuel.beaulieu@tarkalabs.com> # A stored procedure to add a badge.
 insert_post [appschema posts] 2020-06-02T17:18:14Z Samuel Beaulieu <samuel.beaulieu@tarkalabs.com> # A stored procedure to add a post.
+insert_answer [appschema posts insert_post] 2020-06-10T17:50:50Z Samuel Beaulieu <samuel.beaulieu@tarkalabs.com> # Updates the acceptedAnswerId of a post.
 insert_postLink [appschema postLinks] 2020-06-02T17:18:33Z Samuel Beaulieu <samuel.beaulieu@tarkalabs.com> # A stored procedure to add a post link.
 insert_comment [appschema comments] 2020-06-02T17:19:08Z Samuel Beaulieu <samuel.beaulieu@tarkalabs.com> # A stored procedure to add a comment.
 insert_tag [appschema tags] 2020-06-02T17:19:29Z Samuel Beaulieu <samuel.beaulieu@tarkalabs.com> # A stored procedure to add a tag.
 insert_postHistory [appschema postHistory] 2020-06-02T17:20:02Z Samuel Beaulieu <samuel.beaulieu@tarkalabs.com> # A stored procedure to add a post history.
 insert_vote [appschema votes] 2020-06-02T17:20:32Z Samuel Beaulieu <samuel.beaulieu@tarkalabs.com> # A stored procedure to add a vote.
-dataRows [appschema badges comments postHistory postLinks posts tags users votes] 2020-06-01T13:42:27Z Samuel Beaulieu <samuel.beaulieu@tarkalabs.com> # The rows to be inserted.
+dataRows [appschema badges comments postHistory postLinks posts tags users votes insert_vote] 2020-06-01T13:42:27Z Samuel Beaulieu <samuel.beaulieu@tarkalabs.com> # The rows to be inserted.
 @v1.0.0-dev1 2020-06-03T17:22:19Z Samuel Beaulieu <samuel.beaulieu@tarkalabs.com> # Tag v1.0.0-dev1.
+
+

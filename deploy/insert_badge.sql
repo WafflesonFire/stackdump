@@ -16,7 +16,8 @@ CREATE OR REPLACE FUNCTION stackdump.insert_badge(
     INSERT INTO stackdump.badges VALUES($1, $2, $3, $4, $5, $6);
     EXCEPTION
         WHEN foreign_key_violation THEN
-            RAISE NOTICE 'caught fk constraint';
+            RAISE NOTICE 'Caught fk violation: ';
+            RAISE NOTICE 'Invalid userId on badge with id = (%)', $1;
             INSERT INTO stackdump.badges VALUES($1, NULL, $3, $4, $5, $6);
     END;
 $$;
