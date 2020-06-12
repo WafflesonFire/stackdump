@@ -3,8 +3,6 @@ const _7z = require('7zip-min');
 const convert = require('xml-js');
 const answerList = [];
 
-//Section 1: Choose Stackexchange dump, download and unzip
-//Main function
 if(process.argv.length !== 3) {
     console.log('Enter the name of the .7z stackdump file.');
     process.exit(0);
@@ -28,9 +26,10 @@ new Promise((resolve) => {
     generateQueries();
 });
 
-//Section 2: Generate and execute queries
+/*
+Calls the other functions in the correct order necessary to generate the output .sql file.
+*/
 function generateQueries(): void {
-    //Create schema and get list of xml files
     const xmlList: string[] = ['Users.xml', 'Badges.xml', 'Posts.xml', 'PostLinks.xml', 'Comments.xml', 'Tags.xml', 'PostHistory.xml', 'Votes.xml'];
 
     const tempFiles: string[] = fs.readdirSync('./temp');
@@ -41,9 +40,8 @@ function generateQueries(): void {
             process.exit(0);
         }
     });
-
     generateDependencies();
-    //Loop through files in folder
+
     console.log("Processing XML Files:");
     for (let i = 0, p = Promise.resolve(); i < xmlList.length; i++) {
         p = p.then(_ => new Promise(resolve => {
@@ -79,6 +77,7 @@ function generateQueries(): void {
     }
     
 }
+
 
 /*
 Splits the stream by newline characters.
@@ -165,6 +164,7 @@ function generateDependencies(): void {
     query += '-- requires: insert_tag\n';
     query += '-- requires: insert_user\n';
     query += '-- requires: insert_vote\n';
+    query += '-- requires: insert_answer\n';
     query += '\n';
     query += 'BEGIN;\n\n';
 
@@ -172,7 +172,7 @@ function generateDependencies(): void {
 }
 
 /*
-Generates a column list that contains the names of each column.
+Generates a column list that contains the name of each column.
 */
 function generateColumns(currentXml: string): string[] {
     let columnList: string[] = [];
@@ -262,7 +262,7 @@ function generateTypes(currentXml: string): string[] {
 }
 
 /*
-Deletes .xml, .sql and the directory used to hold those files after the query has run.
+Deletes unzipped .xml files and the directory used to hold those files after the query has run.
 */
 function cleanUp(): void {
     fs.readdirSync('./temp').forEach((file) => fs.unlinkSync('./temp/' + file));
